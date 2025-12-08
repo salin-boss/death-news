@@ -1,0 +1,20 @@
+name: Generate Articles
+
+on:
+  schedule:
+    # Runs every 5 minutes (minimum GitHub allows)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger article generation
+        run: |
+          curl -X GET "${{ secrets.SITE_URL }}/api/cron/generate" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail --silent --show-error
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
