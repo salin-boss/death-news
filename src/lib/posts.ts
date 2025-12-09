@@ -166,24 +166,21 @@ export const posts: Post[] = [
   },
 ];
 
-// For server-side: load generated posts from file
-function loadGeneratedPosts(): Post[] {
+// For server-side: load generated posts from Vercel KV
+async function loadGeneratedPosts(): Promise<Post[]> {
   if (typeof window !== "undefined") {
-    return []; // Client-side: can't read files
+    return []; // Client-side: can't access KV
   }
 
   try {
-    const fs = require("fs");
-    const path = require("path");
-    const filePath = path.join(process.cwd(), "src/data/generated-posts.json");
+    const { kv } = await import("@vercel/kv");
+    const data = await kv.get<Array<{ title: string; excerpt: string; content: string; category: string; originalLink: string }>>("generated-posts");
 
-    if (!fs.existsSync(filePath)) {
+    if (!data) {
       return [];
     }
 
-    const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-
-    return data.map((article: { title: string; excerpt: string; content: string; category: string; originalLink: string }) => ({
+    return data.map((article) => ({
       slug: slugify(article.title),
       title: article.title,
       date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
@@ -199,13 +196,13 @@ function loadGeneratedPosts(): Post[] {
   }
 }
 
-export function getPostBySlug(slug: string): Post | undefined {
-  const allPosts = getAllPosts();
+export async function getPostBySlug(slug: string): Promise<Post | undefined> {
+  const allPosts = await getAllPosts();
   return allPosts.find((post) => post.slug === slug);
 }
 
-export function getAllPosts(): Post[] {
-  const generated = loadGeneratedPosts();
+export async function getAllPosts(): Promise<Post[]> {
+  const generated = await loadGeneratedPosts();
   return [...generated, ...posts];
 }
 

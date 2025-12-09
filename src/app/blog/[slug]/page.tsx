@@ -7,13 +7,13 @@ import type { Metadata } from "next";
 type Params = Promise<{ slug: string }>;
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return { title: "Not Found" };
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function BlogPost({ params }: { params: Params }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
